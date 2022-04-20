@@ -1,0 +1,9 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "TextReciever"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-xtz7v2v9gkzq"
+s3_prefix = "TextReciever"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"

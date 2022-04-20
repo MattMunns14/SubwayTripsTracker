@@ -1,0 +1,61 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  subway-monitor
+
+Resources:
+  TextReciever:
+    Type: AWS::Serverless::Function
+    Properties:
+      Policies:
+        - AmazonDynamoDBFullAccess
+        - AmazonS3FullAccess
+      Handler: app.lambda_handler
+      CodeUri: TextReciever/
+      Runtime: python3.8
+      Timeout: 5
+      MemorySize: 512
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref TripsTable
+      Events:
+        HttpPost:
+          Type: Api
+          Properties:
+            Path: '/TextReceiver'
+            Method: post
+
+  HTMLUpdaterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Policies:
+        - AmazonDynamoDBFullAccess
+      Handler: app.lambda_handler
+      CodeUri: HTMLUpdater/
+      Runtime: python3.8
+      Timeout: 35
+      MemorySize: 1024
+      Events:
+        Stream:
+          Type: DynamoDB
+          Properties:
+            Stream: !GetAtt TripsTable.StreamArn
+            BatchSize: 100
+            StartingPosition: LATEST
+
+
+  TripsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: timestamp
+          AttributeType: N
+      KeySchema:
+        - AttributeName: timestamp
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+
